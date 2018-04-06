@@ -108,5 +108,5 @@ class SlackMessageCaller(object):
 
 			
 if __name__ == '__main__':
-	msgr = SlackMessageCaller(token = TOKEN)
+	msgr = SlackMessageCaller(token = SLACK_TOKEN)
 	msgr.start()
