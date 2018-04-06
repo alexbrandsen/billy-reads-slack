@@ -60,12 +60,15 @@ class SlackMessageCaller(object):
 		
 		if not self.keep_sound_files:			
 			tts.save(".temp.mp3")
-			os.system('cvlc --play-and-exit temp.mp3')
+			os.system('cvlc --play-and-exit .temp.mp3')
 			os.remove(".temp.mp3")
 		else:
 			if filename is None:
-				tts.save("message_{}.mp3").format(self.filecounter)
+				filename = "message_{}.mp3").format(self.filecounter)
+				tts.save(filename)
 				self.filecounter += 1
+				
+				os.system('cvlc --play-and-exit {}'.format(filename))
 			else:
 				tts.save("filename.mp3")
 				os.system('cvlc --play-and-exit {}'.format(filename))
