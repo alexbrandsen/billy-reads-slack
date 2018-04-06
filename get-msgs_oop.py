@@ -38,23 +38,8 @@ class SlackMessageCaller(object):
 		for i in range(seconds, 0 , -1):
 			sys.stdout.write("Waiting {} seconds\r".format(i))
 			sys.stdout.flush()
-			time.sleep(1)
-    
-	def play_message(self, message, filename = None):
-		tts = gTTS(text=message, lang='en-uk') # en-us is another option
-		
-		if not self.keep_sound_files:			
-			tts.save(".temp.mp3")
-			os.system('cvlc --play-and-exit temp.mp3')
-			os.remove(".temp.mp3")
-		else:
-			if filename is None:
-				tts.save("message_{}.mp3").format(self.filecounter)
-				self.filecounter += 1
-			else:
-				tts.save("filename.mp3")
-				os.system('cvlc --play-and-exit {}'.format(filename))
-
+			time.sleep(1)    
+	
 	def __startup_routine(self):
 		self.latestMsg = self.sc.api_call("channels.history",channel=randomChannel,count=1)
 		self.prevTimestamp = latestMsg['messages'][0]['ts']
@@ -70,7 +55,21 @@ class SlackMessageCaller(object):
 		
 		self.play_message(msg_to_play)
 		
-	
+	def play_message(self, message, filename = None):
+		tts = gTTS(text=message, lang='en-uk') # en-us is another option
+		
+		if not self.keep_sound_files:			
+			tts.save(".temp.mp3")
+			os.system('cvlc --play-and-exit temp.mp3')
+			os.remove(".temp.mp3")
+		else:
+			if filename is None:
+				tts.save("message_{}.mp3").format(self.filecounter)
+				self.filecounter += 1
+			else:
+				tts.save("filename.mp3")
+				os.system('cvlc --play-and-exit {}'.format(filename))
+
 	def start(self):
 		self.__startup_routine()
 		
