@@ -1,3 +1,7 @@
+"""
+Important Note. Make sure that apart from the python libraries below, you also have vlc installed.
+You can do this by typing "sudo apt-get install vlc" in the command line.
+"""
 from slackclient import SlackClient
 import pprint
 from gtts import gTTS
@@ -5,6 +9,7 @@ import sys
 import time
 import datetime
 import os
+
 
 pp = pprint.PrettyPrinter(indent=4)
 
