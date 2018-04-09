@@ -80,7 +80,7 @@ while True:
 			prevTimestamp = msg['ts']
 	else:
 		now = datetime.datetime.now()
-		print "No new messages at "+now.strftime("%Y-%m-%d %H:%M:%S")
+		print ("No new messages at {}".format(now.strftime("%Y-%m-%d %H:%M:%S")))
 		
 	# wait a bit till we recheck the channel, in seconds	
 	sleep_countdown(2)
