@@ -9,13 +9,14 @@ import sys
 import time
 import datetime
 import os
-
+from pydub import AudioSegment
+import subprocess
 
 pp = pprint.PrettyPrinter(indent=4)
 
 # --- HARD CODED PARAMS ---
 # set up slack client
-SLACK_TOKEN = 'Slack Token'
+SLACK_TOKEN = 'token'
 
 # set channel ID to get msgs from
 CHANNEL = 'C9CFE1J8J'  # get all channels with sc.api_call("channels.list")
@@ -86,10 +87,16 @@ class SlackMessageCaller(object):
 
         userId = self.latestMsg['messages'][0]['user']
         user = self.sc.api_call("users.info", user=userId)
-        pp.pprint(user)
-        firstName = user['user']['profile']['first_name']
+        
+        #pp.pprint(user)
+        
+        # check if firstname is filled out, if not, use display name
+        if 'first_name' in user['user']['profile']:
+            name = user['user']['profile']['first_name']
+        else:
+            name = user['user']['profile']['display_name']
 
-        msg_to_play = '{} says "{}"'.format(firstName, self.latestMsgText)
+        msg_to_play = '{} says "{}"'.format(name, self.latestMsgText)
         print(msg_to_play)
 
         self.play_message(msg_to_play)
@@ -104,19 +111,44 @@ class SlackMessageCaller(object):
         :param message:
         :return: None
         """
-        tts = gTTS(text=message, lang=self.language)
-
+        
+		# create filename
         if not self.keep_sound_files:
-            tts.save(".temp.mp3")
-            os.system('cvlc --play-and-exit .temp.mp3')
-            os.remove(".temp.mp3")
+            filename = ".temp.mp3"
         else:
             filename = self.__generate_soundfilename()
             filename = "message_{}.mp3".format(self.filecounter)
-            tts.save(filename)
             self.filecounter += 1
-            os.system('cvlc --play-and-exit {}'.format(filename))
+        
+        # save output from Google TTS 
+        tts = gTTS(text=message, lang=self.language)    
+        tts.save(filename)
+        
+        # load mp3 into an AudioSegment
+        wave = AudioSegment.from_mp3(".temp.mp3")
 
+		# get peak amplitude of entire file, to normalise amplitude of slices later
+        peak_amplitude = wave.max # or use wave.dBFS for loudness instead of amplitude, but amplitude seems to fit mouth movement better
+
+        # split sound1 in  slices
+        sliceInterval = 50 # in milliseconds
+        slices = wave[::sliceInterval]
+        
+        # play audio file
+        subprocess.Popen(['mpg123', '-q', filename])
+        
+        # While audio is playing, loop through slices, get max amp and normalise to value between 0 - 100
+        for s in slices:
+            slice_peak_amplitude = s.max
+            normalised_amplitude = slice_peak_amplitude / peak_amplitude * 100
+            bar = "|" * int(normalised_amplitude) # use int() to round percentage
+            print(bar)
+            time.sleep(sliceInterval/1000) # wait for defined interval time
+        
+        # remove temp file if needed
+        if not self.keep_sound_files:
+            os.remove(".temp.mp3")    
+        
     def start(self):
         """
         Start an infinite loop that checks every N seconds whether there are new messages. If so, these messages are played.
